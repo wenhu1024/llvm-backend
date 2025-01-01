@@ -7,9 +7,11 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Support/Debug.h" // For errs().
 
 #include <memory> // For unique_ptr
+#include <type_traits>
 
 using namespace llvm;
 
@@ -57,4 +59,60 @@ using namespace llvm;
 //
 // declare void @bar(i32)
 // declare i32 @baz(...)
-std::unique_ptr<Module> myBuildModule(LLVMContext &Ctxt) { return nullptr; }
+std::unique_ptr<Module> myBuildModule(LLVMContext &Ctxt) { 
+    Type *Int32Ty = Type::getInt32Ty(Ctxt);
+    Type *VoidTy = Type::getVoidTy(Ctxt);
+    PointerType *PtrTy = PointerType::get(Ctxt,0);
+
+    std::unique_ptr<Module> MyModule=std::make_unique<Module>("my solution module",Ctxt);
+
+    FunctionType *BazTy=FunctionType::get(Int32Ty,false);
+    Function *BazFunc =cast<Function>(MyModule->getOrInsertFunction("baz",BazTy).getCallee());
+
+    FunctionType *BarTy=FunctionType::get(VoidTy,Int32Ty,false);
+    Function *BarFunc=cast<Function>(MyModule->getOrInsertFunction("bar",BarTy).getCallee());
+
+    FunctionType *FooTy=FunctionType::get(VoidTy,{Int32Ty,Int32Ty},false);
+    Function *FooFunc=cast<Function>(MyModule->getOrInsertFunction("foo",FooTy).getCallee());
+
+    BasicBlock *BB=BasicBlock::Create(Ctxt,"bb",FooFunc);
+    BasicBlock *BB9=BasicBlock::Create(Ctxt,"bb9",FooFunc);
+    BasicBlock *BB12=BasicBlock::Create(Ctxt,"bb12",FooFunc);
+
+    IRBuilder Builder(BB); 
+    Value *I=Builder.CreateAlloca(Int32Ty);
+    Value *I1=Builder.CreateAlloca(Int32Ty);
+    Value *I2=Builder.CreateAlloca(Int32Ty);
+
+    Value *Arg=FooFunc->getArg(0);
+    Value *Arg1=FooFunc->getArg(1);
+    Builder.CreateStore(Arg,I);
+    Builder.CreateStore(Arg1,I1);
+
+    Value *I3=Builder.CreateLoad(Int32Ty,I);
+    Value *I4=Builder.CreateLoad(Int32Ty,I1);
+    Value *I5=Builder.CreateAdd(I3, I4);
+
+    Builder.CreateStore(I5,I2);
+    Value *I6=Builder.CreateLoad(Int32Ty,I2);
+
+    Value *Cst255=ConstantInt::get(Int32Ty,255);
+    Value *I7=Builder.CreateICmpEQ(I6,Cst255);
+
+    Builder.CreateCondBr(I7,BB9,BB12);
+
+
+    Builder.SetInsertPoint(BB9);
+    Value *I8=Builder.CreateLoad(Int32Ty,I2);
+    Builder.CreateCall(BarFunc->getFunctionType(),BarFunc,ArrayRef(I8));
+    Value *I9=Builder.CreateCall(BazFunc->getFunctionType(),BazFunc);
+    Builder.CreateStore(I9, I2);
+    Builder.CreateBr(BB12);
+
+    Builder.SetInsertPoint(BB12);
+    Value *I10=Builder.CreateLoad(Int32Ty,I2);
+    Builder.CreateCall(BarFunc->getFunctionType(),BarFunc,ArrayRef(I10));
+    Builder.CreateRetVoid();
+
+    return MyModule; 
+}
