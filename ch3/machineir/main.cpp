@@ -50,7 +50,7 @@ int main() {
     errs() << TT << " is not available with this build of LLVM\n";
     return -1;
   }
-  LLVMTargetMachine *LLVMTM = static_cast<LLVMTargetMachine *>(
+  TargetMachine *LLVMTM = static_cast<TargetMachine *>(
       TheTarget->createTargetMachine(TT, "", "", TargetOptions(), std::nullopt,
                                      std::nullopt, CodeGenOptLevel::Default));
   MachineModuleInfoWrapperPass MMIWP(LLVMTM);
