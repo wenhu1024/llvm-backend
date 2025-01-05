@@ -1,5 +1,7 @@
+#include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Pass.h"          // For FunctionPass & INITIALIZE_PASS.
+#include "llvm/PassRegistry.h"
 #include "llvm/Support/Debug.h" // For errs().
 
 using namespace llvm;
@@ -13,17 +15,29 @@ void initializeYourTurnConstantPropagationPass(PassRegistry &);
 };
 
 namespace {
-class YourTurnConstantPropagation /* TODO: Fill in the blanks */ {
+class YourTurnConstantPropagation:public FunctionPass  {
 public:
-  YourTurnConstantPropagation() /* TODO: Fill in the blanks */ {}
+  YourTurnConstantPropagation():FunctionPass(ID) 
+  {
+    initializeYourTurnConstantPropagationPass(*PassRegistry::getPassRegistry());
+  }
 
-  // TODO: Fill in the blanks.
+  static char ID;
+
+  bool runOnFunction(Function &F) override{
+    errs() << "my Solution Legacy called on " << F.getName() << '\n';
+    return solutionConstantPropagation(F);
+  }
 };
 } // End anonymous namespace.
 
-// TODO: Remove and add proper implementation
-void llvm::initializeYourTurnConstantPropagationPass(PassRegistry &) {}
+INITIALIZE_PASS(/*passImplementationName=*/YourTurnConstantPropagation,
+                /*commandLineArgName=*/"legacy-solution",
+                /*name=*/"Legacy Solution", /*isCFGOnly=*/false,
+                /*isAnalysis=*/false);
+
+char YourTurnConstantPropagation::ID=0;
 
 Pass *createYourTurnPassForLegacyPM() {
-  return nullptr; // TODO: Fill in the blanks.
+  return new YourTurnConstantPropagation();
 }

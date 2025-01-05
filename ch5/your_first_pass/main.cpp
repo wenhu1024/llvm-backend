@@ -4,6 +4,7 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/LegacyPassManager.h" // For legacy::PassManager.
 #include "llvm/IR/Module.h"
+#include "llvm/IR/PassInstrumentation.h"
 #include "llvm/IR/PassManager.h" // For the new PassManager.
 #include "llvm/IR/Verifier.h"
 #include "llvm/IRReader/IRReader.h"        // For parseIRFile.
